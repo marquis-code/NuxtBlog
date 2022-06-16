@@ -3,6 +3,7 @@
       <br />
       <h1 class="">Publish new post</h1>
        <p class="errorText">{{error ? error : ''}}</p>
+       <p class="errorText">{{message ? message : ''}}</p>
       <b-form
         @submit.prevent="handlePost"
       >
@@ -63,12 +64,14 @@
           type="text"
           @keyup.alt="addHashTag"
         ></b-form-input>
-          <b-form-text>
-                      Post hash tags must begin with # and ensure you press ALT + COMMA after every hash tag
-         </b-form-text>
-        <div v-for="tag in form.tags" :key="tag">
-             <span>{{tag && tag.split('#')[1]}}</span>
+         <div class="tagsContainer">
+            <div v-for="tag in form.tags" :key="tag">
+             <div class="tag">{{tag && tag.split('#')[1]}}</div>
         </div>
+         </div>
+            <b-form-text>
+             Post hash tags must begin with # and ensure you press ALT + COMMA after every hash tag
+         </b-form-text>
       </b-form-group>
 
        <b-button type="submit" block variant="primary">{{loading ? 'Publishing blog...' : 'Publish'}}</b-button>
@@ -82,6 +85,7 @@
       return {
         loading: false,
         error : null,
+        successMessage : '',
         form: {
           title : '',
           subTitle : '',
@@ -102,17 +106,23 @@
            }
         },
         async handlePost(){
-          const {title, subTitle, email, readingTime, description, tags } = this.form;
-          if(!title || !subTitle || !email || !readingTime || !description || !tags){
+          const {title, subTitle, readingTime, description, tags } = this.form;
+          if(!title || !subTitle || !readingTime || !description || !tags){
             this.error = 'Please enter all fields information'
           } else {
             let blogData = { title, subTitle, description, readingTime, tags }
-            console.log(blogData)
+
             try {
-                let response = await this.$axios.post("https://annie-blog.herokuapp.com/api/post", { title, subTitle, description, readingTime, tags })
-               if(response.status === 201){
-                 this.$router.push('/')
-               }
+                   const response = await this.$axios.post("https://annie-blog.herokuapp.com/api/post", { title, subTitle, description, readingTime, tags })
+                   this.successMessage = response.data.successMessage;
+                   this.$router.push('/')
+                   this.form.title = '';
+                   this.form.subTitle = '';
+                   this.form.email= '';
+                   this.form.readingTime = '';
+                   this.form.description = '';
+                   this.form.hashTag = '';
+                   this.form.tags = [];
             } catch (error) {
                 this.error = error.response.data.errorMessage
             }
@@ -158,4 +168,22 @@ label {
   color: red;
   font-size: medium;
 }
+
+.tagsContainer{
+  margin-top: 3px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+  .tag {
+     border: 1px solid #ccc;
+     font-size: small;
+     padding-top: 2px;
+      padding-bottom: 2px;
+     padding-right: 5px;
+     padding-left: 5px;
+     border-radius: 5px;
+     margin: 2px;
+  }
 </style>
